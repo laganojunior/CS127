@@ -37,7 +37,7 @@ void genRegParity(unsigned int wc, unsigned int wr,
             rowCount[i] = 0;
 
         // Fill out the ones
-        for (int col = (rowPart + 1) * numRows ; col < width; col++)
+        for (int col = 0; col < width; col++)
         {
             // Choose a random row to place the one.
             int choice = rand() % numRows;
