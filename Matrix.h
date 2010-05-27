@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -46,7 +47,30 @@ struct Matrix
             }
             out << endl;
         }
-    }    
+    } 
+
+    // Return the result of a binary matrix multiply
+    Matrix binaryMult(const Matrix& mat)
+    {
+        assert(width == mat.height);
+
+        Matrix prod(mat.width, height);
+
+        for (int i = 0; i < height; i ++)
+        {
+            for (int j = 0; j < mat.width; j++)
+            {
+                int sum = 0;
+                for (int k = 0; k < mat.height; k++)
+                {
+                    // Product in binary is and, addition in binary is xor
+                    sum ^= m[i][k] & mat.m[k][j];
+                }
+                prod.m[i][j] = sum;
+            }
+        }  
+        return prod;
+    }
 };
 
 
