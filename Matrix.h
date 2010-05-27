@@ -16,6 +16,12 @@ struct Matrix
     // to 0
     Matrix(unsigned int width, unsigned int height)
     {
+        setDim(width, height); 
+    }
+
+    // Function to set width and height, and setting all elements to 0
+    void setDim(unsigned int width, unsigned int height)
+    {
         this->width = width;
         this->height = height;    
         
