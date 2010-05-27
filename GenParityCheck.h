@@ -5,7 +5,7 @@
 // This file contains definitions of methods to generate parity check
 // matrices and corresponding generator matrices
 
-void genRegLDPCEasy(unsigned int wc, unsigned int wr,
-                    unsigned int width, Matrix& mat);
+void genRegParity(unsigned int wc, unsigned int wr,
+                  unsigned int width, Matrix& mat);
 
 #endif

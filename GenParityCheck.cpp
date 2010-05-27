@@ -12,13 +12,9 @@ using namespace std;
 // respective width (the height is then wc * width / wr).
 //
 // This function needs wr | width
-//
-// This function also makes it easy to obtain a generator matrix
-// having ones along the diagonal, enabling guassian elimination
-// without having to permute rows or columns
 ///////////////////////////////////////////////////////////////////
-void genRegLDPCEasy(unsigned int wc, unsigned int wr,
-                    unsigned int width, Matrix& mat)
+void genRegParity(unsigned int wc, unsigned int wr,
+                  unsigned int width, Matrix& mat)
 {
     // Make sure the constraints on the inputs are satisfied
     assert(width % wr == 0);
@@ -40,27 +36,7 @@ void genRegLDPCEasy(unsigned int wc, unsigned int wr,
         for (int i = 0; i < numRows; i++)
             rowCount[i] = 0;
 
-        // Do the rows before the diagonal block
-        for (int col = 0; col < rowPart * numRows; col++)
-        {
-            // Choose a random row to place the one. Make sure to leave
-            // room for at least 1 one per row for the diagonal
-            int choice = rand() % numRows;
-            while (rowCount[choice] >= wr - 1)
-                choice = rand() % numRows;
-
-            mat.m[rowPart * numRows + choice][col] = 1;
-            rowCount[choice]++;
-        }
-
-        // Do the diagonal block
-        for (int col = rowPart * numRows; col < (rowPart + 1) * numRows; col++)
-        {
-            mat.m[col][col] = 1;
-            rowCount[col - rowPart * numRows]++;
-        }
-
-        // Do the rows after the diagonal block
+        // Fill out the ones
         for (int col = (rowPart + 1) * numRows ; col < width; col++)
         {
             // Choose a random row to place the one.

@@ -9,7 +9,7 @@ int main()
     Matrix mat(4, 3);
     mat.print(cout);
 
-    genRegLDPCEasy(3, 4, 12, mat);
+    genRegParity(3, 4, 12, mat);
     mat.print(cout);
 
     Matrix mat2(1, 12);
