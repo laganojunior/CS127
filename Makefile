@@ -1,5 +1,5 @@
-test: test.o GenParityCheck.o
-	g++ -o test test.o GenParityCheck.o
+autogenmat: autogenmat.o GenParityCheck.o Matrix.h
+	g++ -o autogenmat autogenmat.o GenParityCheck.o
 
 clean:
 	rm *.o

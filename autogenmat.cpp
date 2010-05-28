@@ -6,13 +6,38 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char ** argv)
 {
+    if (argc != 6)
+    {
+        cout << "Usage: autogenmat gFilename hFilename wc wr N\n"
+             << "\tGenerates a pair of LDPC parity check matrix and a\n"
+             << "\tcorresponding systematic generator matrix\n\n";
+
+        cout << "\thFilename, gFilename - the files to write the parity\n"
+             << "\tcheck matrix and generator matrix to respectively\n\n";
+
+        cout << "\twc, wr - The maximum number of ones per column and row\n"
+             << "\tresp.\n\n";
+
+        cout << "\tN is the width of the parity check matrix. The height is\n"
+             << "\tN * wr / wc (as the parity check matrix is generated from\n"
+             << "\ta regular matrix)\n"; 
+
+        exit(0) ;
+    } 
+
+    string gFilename = argv[1];
+    string hFilename = argv[2];
+    int wc = atoi(argv[3]);
+    int wr = atoi(argv[4]);
+    int  N = atoi(argv[5]);
+        
     srand(time(0));
 
     // Generate some regular parity check matrix
     Matrix h(1, 1);
-    genRegParity(3, 4, 16, h);
+    genRegParity(wc, wr, N, h);
     cout << "Original Parity\n";
     h.print(cout);
     cout << endl;
@@ -65,8 +90,12 @@ int main()
     }
 
     // Save the matrices
-    ofstream gout("G.txt");
+    ofstream gout(gFilename.c_str());
     g.print(gout);
     gout.close();
+
+    ofstream hout(hFilename.c_str());
+    h.print(hout);
+    hout.close();
     return 0;
 }
