@@ -49,3 +49,41 @@ void genRegParity(unsigned int wc, unsigned int wr,
         }
     } 
 }
+
+/////////////////////////////////////////////////////////////////////////
+// This function eliminates 1's from a parity check matrix so that
+// cycles of length 4 are eliminated in the corresponding tanner graph
+/////////////////////////////////////////////////////////////////////////
+void removeShortCycles(Matrix& mat)
+{
+    for (int i = 0; i < mat.width; i++)
+    {
+        for (int j = i + 1; j < mat.width; j++)
+        {
+            vector<int> same;
+            for (int k = 0; k < mat.height; k++)
+                if (mat.m[k][i] & mat.m[k][j])
+                    same.push_back(k);
+            
+            if (same.size() > 1)
+            {
+                // Remove ones to only allow 1 pair per pair of columns
+                int keep = rand() % same.size();
+                 
+                for (int k = 0; k < keep; k++)
+                {
+                    int choice = rand() % 2;
+                    mat.m[same[k]][choice ? i : j] = 0;
+                }
+
+                for (int k = keep + 1; k < same.size(); k++)
+                {
+                    int choice = rand() % 2;
+                    mat.m[same[k]][choice ? i : j] = 0;
+                }
+            }
+        }
+    }
+
+    mat.height = mat.m.size();
+}
