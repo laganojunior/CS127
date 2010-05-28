@@ -71,6 +71,37 @@ struct Matrix
         }  
         return prod;
     }
+
+    // Transpose this matrix
+    void transpose()
+    {
+        vector<vector< unsigned char> > old = m;
+        setDim(height, width);
+
+        for (int row = 0; row < height; row++)
+        {
+            for (int col = 0; col < width; col++)
+            {
+                m[row][col] = old[col][row];
+            }
+        }
+    } 
+
+    // Check if all the entries are 0
+    bool isZero()
+    {
+
+        for (int row = 0; row < height; row++)
+        {
+            for (int col = 0; col < width; col++)
+            {
+                if (m[row][col])
+                    return false;
+            }
+        }
+
+        return true;
+    }
 };
 
 

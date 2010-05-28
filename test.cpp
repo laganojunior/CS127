@@ -7,11 +7,11 @@ using namespace std;
 
 int main()
 {
-    srand(10000);
+    srand(time(0));
 
     // Generate some regular parity check matrix
     Matrix h(1, 1);
-    genRegParity(3, 8, 24, h);
+    genRegParity(3, 4, 16, h);
     cout << "Original Parity\n";
     h.print(cout);
     cout << endl;
@@ -25,7 +25,10 @@ int main()
     // Permute the columns of the parity check to enable an easy
     // derivation of a systematic encoder
     if (!permuteForSystematic(h, 20))
+    {
         cout << "Error in systematic permute\n";
+        exit(1);
+    }
 
     cout << "After systematic permute\n";
     h.print(cout);
@@ -34,7 +37,10 @@ int main()
     // Generate a systematic generator matrix
     Matrix g(1, 1);
     if (!genSystematicGenerator(h, g))
+    {
         cout << "Error in systematic generation\n";
+        exit(1);
+    }
     
     cout << "After systematic generator matrix generation\n";
     cout << "H\n";
@@ -44,4 +50,17 @@ int main()
     cout << "G\n";
     g.print(cout);
     cout << endl; 
+
+    // Test if g is a valid generator matrix
+    Matrix tH = h; tH.transpose();
+    Matrix prod = g.binaryMult(tH);
+
+    if (!prod.isZero())
+    {
+        cout << "G is not a valid generator!\n";
+        cout << "GH ^ T is\n";
+        prod.print(cout);
+        cout << endl;
+    }
+
 }
