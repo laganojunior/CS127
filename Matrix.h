@@ -22,6 +22,16 @@ struct Matrix
         setDim(width, height); 
     }
 
+    // Constructor to construct from a column vector
+    Matrix(const vector<unsigned char>& vec)
+    {
+        setDim(1, vec.size());
+        for (int i = 0; i < vec.size(); i++)
+        {
+            m[i][0] = vec[i];
+        }
+    }
+
     // Function to set width and height, and setting all elements to 0
     void setDim(unsigned int width, unsigned int height)
     {
