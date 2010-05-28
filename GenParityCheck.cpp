@@ -47,7 +47,7 @@ void genRegParity(unsigned int wc, unsigned int wr,
             mat.m[rowPart * numRows + choice][col] = 1;
             rowCount[choice]++;
         }
-    } 
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -86,4 +86,98 @@ void removeShortCycles(Matrix& mat)
     }
 
     mat.height = mat.m.size();
+}
+
+////////////////////////////////////////////////////////////////////////
+// Attempt to permute the columns of the input parity check matrix to
+// make proper for systematic encoding. Specifically, the square matrix
+// at the right (the part for the parity bits) must be invertible.
+//
+// Returns true if success, false otherwise.
+////////////////////////////////////////////////////////////////////////
+bool permuteForSystematic(Matrix& mat, int maxIters)
+{
+    int numIters;
+    for (numIters = 0; numIters < maxIters; numIters++)
+    {
+        // Check if the last height columns form an invertible matrix using
+        // Guassian elimination
+
+        Matrix t = mat; // Make a copy of mat to mess around with
+        bool good = true; 
+        for (int row = 0; row < t.height; row++)
+        {
+            int col = t.width - t.height + row;
+            // Find some row with a 1 in the desired column
+            int row2;
+            for (row2 = row; row2 < t.height &&
+                             t.m[row2][col] == 0;
+                             row2++);
+
+            if (row2 == t.height)
+            {
+                good = false;
+                // error encountered, try another iteration
+                break;
+            }
+
+            // If a row was found, swap it for this row
+            if (row != row2)
+            {
+                vector<unsigned char> temp = t.m[row];
+                t.m[row] = t.m[row2];
+                t.m[row2] = temp;
+            }
+
+            // Eliminate all the ones in the column in other rows by adding
+            // this row to those columns
+            
+            for (int r = 0; r < row; r++)
+            {
+                if (t.m[r][col])
+                {
+                    for (int rowIter = 0; rowIter < t.width; rowIter++)
+                    {
+                        t.m[r][rowIter] ^= t.m[row][rowIter];
+                    }
+                }
+            }
+
+            for (int r = row + 1; r < t.height; r++)
+            {
+                if (t.m[r][col])
+                {
+                    for (int rowIter = 0; rowIter < t.width; rowIter++)
+                    {
+                        t.m[r][rowIter] ^= t.m[row][rowIter];
+                    }
+                }
+            }
+        }
+
+        // If the result was not found, permute the columns of the parity
+        // matrix
+        if (!good)
+        {
+            int col1 = rand() % (mat.width - mat.height);
+            int col2 = (rand() % mat.height) + mat.width - mat.height;
+
+            for (int row = 0; row < mat.height; row++)
+            {
+                unsigned char val = mat.m[row][col1];
+                mat.m[row][col1] = mat.m[row][col2];
+                mat.m[row][col2] = val;
+            }
+        }
+        else
+        {
+            // Otherwise, the parity check matrix as is should be fine
+            break; 
+        } 
+    }
+
+    if (numIters == maxIters)
+        return false;
+    else
+        return true;
 }

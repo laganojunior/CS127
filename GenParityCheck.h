@@ -8,5 +8,5 @@
 void removeShortCycles(Matrix& mat);
 void genRegParity(unsigned int wc, unsigned int wr,
                   unsigned int width, Matrix& mat);
-
+bool permuteForSystematic(Matrix& mat, int maxIters);
 #endif
