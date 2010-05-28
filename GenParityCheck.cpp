@@ -88,6 +88,72 @@ void removeShortCycles(Matrix& mat)
     mat.height = mat.m.size();
 }
 
+/////////////////////////////////////////////////////////////////////////
+// This function guassian eliminates such that the right <height> columns
+// form the identity.
+//
+// Returns true on success, false otherwise
+//
+// NOTE: Regardless of success or not, this function modifies the input
+///////////////////////////////////////////////////////////////////////// 
+bool guassianRightEliminate(Matrix& t)
+{
+    bool good = true;
+    // Go through each row
+    for (int row = 0; row < t.height; row++)
+    {
+        int col = t.width - t.height + row;
+
+        // Find some row with a 1 in the desired column
+        int row2;
+        for (row2 = row; row2 < t.height &&
+                         t.m[row2][col] == 0;
+                         row2++);
+
+        if (row2 == t.height)
+        {
+            good = false; // Unable to continue guassian elimination
+            break; 
+        }
+
+        // If a row was found, swap it for this row
+        if (row != row2)
+        {
+            vector<unsigned char> temp = t.m[row];
+            t.m[row] = t.m[row2];
+            t.m[row2] = temp;
+        }
+
+        // Eliminate all the ones in the column in other rows by adding
+        // this row to those columns
+        
+        for (int r = 0; r < row; r++)
+        {
+            if (t.m[r][col])
+            {
+                for (int rowIter = 0; rowIter < t.width; rowIter++)
+                {
+                    t.m[r][rowIter] ^= t.m[row][rowIter];
+                }
+            }
+        }
+
+        for (int r = row + 1; r < t.height; r++)
+        {
+            if (t.m[r][col])
+            {
+                for (int rowIter = 0; rowIter < t.width; rowIter++)
+                {
+                    t.m[r][rowIter] ^= t.m[row][rowIter];
+                }
+            }
+        }
+    }
+
+    return good;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // Attempt to permute the columns of the input parity check matrix to
 // make proper for systematic encoding. Specifically, the square matrix
@@ -102,59 +168,9 @@ bool permuteForSystematic(Matrix& mat, int maxIters)
     {
         // Check if the last height columns form an invertible matrix using
         // Guassian elimination
-
-        Matrix t = mat; // Make a copy of mat to mess around with
-        bool good = true; 
-        for (int row = 0; row < t.height; row++)
-        {
-            int col = t.width - t.height + row;
-            // Find some row with a 1 in the desired column
-            int row2;
-            for (row2 = row; row2 < t.height &&
-                             t.m[row2][col] == 0;
-                             row2++);
-
-            if (row2 == t.height)
-            {
-                good = false;
-                // error encountered, try another iteration
-                break;
-            }
-
-            // If a row was found, swap it for this row
-            if (row != row2)
-            {
-                vector<unsigned char> temp = t.m[row];
-                t.m[row] = t.m[row2];
-                t.m[row2] = temp;
-            }
-
-            // Eliminate all the ones in the column in other rows by adding
-            // this row to those columns
-            
-            for (int r = 0; r < row; r++)
-            {
-                if (t.m[r][col])
-                {
-                    for (int rowIter = 0; rowIter < t.width; rowIter++)
-                    {
-                        t.m[r][rowIter] ^= t.m[row][rowIter];
-                    }
-                }
-            }
-
-            for (int r = row + 1; r < t.height; r++)
-            {
-                if (t.m[r][col])
-                {
-                    for (int rowIter = 0; rowIter < t.width; rowIter++)
-                    {
-                        t.m[r][rowIter] ^= t.m[row][rowIter];
-                    }
-                }
-            }
-        }
-
+        Matrix t = mat;
+        bool good = guassianRightEliminate(t);
+ 
         // If the result was not found, permute the columns of the parity
         // matrix
         if (!good)
