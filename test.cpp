@@ -2,6 +2,7 @@
 #include "Matrix.h"
 #include "GenParityCheck.h"
 #include <cstdlib>
+#include <fstream>
 
 using namespace std;
 
@@ -63,4 +64,9 @@ int main()
         cout << endl;
     }
 
+    // Save the matrices
+    ofstream gout("G.txt");
+    g.print(gout);
+    gout.close();
+    return 0;
 }

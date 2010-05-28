@@ -39,6 +39,7 @@ struct Matrix
     // Print the matrix to some output stream
     void print(ostream& out)
     {
+        out << height << " " << width << endl;
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
@@ -48,6 +49,23 @@ struct Matrix
             out << endl;
         }
     } 
+
+    // Load from an input stream
+    void load(istream& in)
+    {
+        in >> height >> width;
+
+        setDim(width, height);
+        for (int i = 0; i < height; i++)
+        {
+            for (int j = 0; j < width; j++)
+            {
+                int val;
+                in >> val;
+                m[i][j] = val;
+            }
+        }
+    }
 
     // Return the result of a binary matrix multiply
     Matrix binaryMult(const Matrix& mat)
@@ -102,6 +120,7 @@ struct Matrix
 
         return true;
     }
+
 };
 
 
