@@ -36,7 +36,7 @@ int main(int argc, char ** argv)
     srand(time(0));
 
     // Generate some regular parity check matrix
-    Matrix h(1, 1);
+    Matrix h;
     genRegParity(wc, wr, N, h);
     cout << "Original Parity\n";
     h.print(cout);
@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
     cout << endl;
 
     // Generate a systematic generator matrix
-    Matrix g(1, 1);
+    Matrix g;
     if (!genSystematicGenerator(h, g))
     {
         cout << "Error in systematic generation\n";

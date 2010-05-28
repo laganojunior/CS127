@@ -13,6 +13,8 @@ struct Matrix
     vector<vector<unsigned char> > m;
     unsigned int width, height;
 
+    Matrix() {}
+
     // Constructor, sets the size of the matrix and sets all the entries
     // to 0
     Matrix(unsigned int width, unsigned int height)
