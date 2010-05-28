@@ -197,3 +197,42 @@ bool permuteForSystematic(Matrix& mat, int maxIters)
     else
         return true;
 }
+
+////////////////////////////////////////////////////////////////////////////
+// This function generates a systematic generator matrix for the given
+// parity check matrix. 
+//
+// Returns true on success, false otherwise. The only reason for known failure
+// is a failure on guassian right elimination
+///////////////////////////////////////////////////////////////////////////
+bool genSystematicGenerator(const Matrix& parity, Matrix& gen)
+{
+    Matrix t = parity;
+
+    // Attempt to get the identity matrix at the right end
+    if (!guassianRightEliminate(t))
+        return false;
+   
+    // Set the generator to the appropriate size. Note that this zeros
+    // the matrix
+    int genHeight = parity.width - parity.height;
+    gen.setDim(parity.width, genHeight);
+
+    // Fill in the identity at the left side
+    for (int i = 0; i < genHeight; i++)
+    {
+        gen.m[i][i] = 1;
+    }
+
+    // Fill in the rest as the transpose of the left side of the parity
+    // check matrix
+    for (int row = 0; row < genHeight; row++)
+    {
+        for (int col = 0; col < parity.height; col++)
+        {
+            gen.m[row][col + genHeight] = t.m[col][row];
+        }
+    }
+
+    return true;
+}

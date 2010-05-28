@@ -8,22 +8,40 @@ using namespace std;
 int main()
 {
     srand(10000);
-    Matrix mat(4, 3);
-    genRegParity(3, 8, 24, mat);
+
+    // Generate some regular parity check matrix
+    Matrix h(1, 1);
+    genRegParity(3, 8, 24, h);
     cout << "Original Parity\n";
-    mat.print(cout);
-    
+    h.print(cout);
     cout << endl;
 
-    removeShortCycles(mat); 
+    // Remove cycles of length 4
+    removeShortCycles(h); 
     cout << "After Short Cycles\n";
-    mat.print(cout);
+    h.print(cout);
     cout << endl;
 
-    if (!permuteForSystematic(mat, 20))
+    // Permute the columns of the parity check to enable an easy
+    // derivation of a systematic encoder
+    if (!permuteForSystematic(h, 20))
         cout << "Error in systematic permute\n";
 
     cout << "After systematic permute\n";
-    mat.print(cout);
+    h.print(cout);
     cout << endl;
+
+    // Generate a systematic generator matrix
+    Matrix g(1, 1);
+    if (!genSystematicGenerator(h, g))
+        cout << "Error in systematic generation\n";
+    
+    cout << "After systematic generator matrix generation\n";
+    cout << "H\n";
+    h.print(cout);
+    cout << endl;
+
+    cout << "G\n";
+    g.print(cout);
+    cout << endl; 
 }

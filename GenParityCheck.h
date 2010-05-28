@@ -11,4 +11,5 @@ void genRegParity(unsigned int wc, unsigned int wr,
 bool guassianRightEliminate(Matrix& mat);
 bool permuteForSystematic(Matrix& mat, int maxIters);
 
+bool genSystematicGenerator(const Matrix& parity, Matrix& gen);
 #endif
