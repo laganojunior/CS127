@@ -2,11 +2,13 @@
 #include "LDPC.h"
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 using namespace std;
 
 int main()
 {
+    srand(time(0));
 
     ifstream gin("G.txt");
     Matrix g;
@@ -29,11 +31,30 @@ int main()
     message.push_back(1);
     message.push_back(0);
 
-    vector<float> encode = ldpc.encode(message);
-    for (int i = 0; i < encode.size(); i++)
+    cout << "Original Message: ";
+    for (int i = 0; i < message.size(); i++)
     {
-        cout << encode[i] << " ";
+        cout << (int)message[i] << " ";
     }
     cout << endl;
+
+    // Encode the message 
+    vector<float> code = ldpc.encode(message);
+    cout << "Encoded Message: ";
+    for (int i = 0; i < code.size(); i++)
+    {
+        cout << code[i] << " ";
+    }
+    cout << endl;
+
+    // Add some noise
+    ldpc.addAWGN(code, 2.0);
+    cout << "Sent Message: ";
+    for (int i = 0; i < code.size(); i++)
+    {
+        cout << code[i] << " ";
+    }
+    cout << endl;
+
     return 0;
 }

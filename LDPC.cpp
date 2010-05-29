@@ -1,4 +1,6 @@
 #include "LDPC.h"
+#include <cstdlib>
+#include <math.h>
 
 ///////////////////////////////////////////////////////////////////////////
 // Sets the generator matrix (g) and parity check matrix (h). This function
@@ -23,7 +25,7 @@ void LDPC :: setMatrices(const Matrix& g, const Matrix& h)
         {
             if (h.m[row][col])
                 checkNodeEdges[row].push_back(col);
-        } 
+        }
     }
 }
 
@@ -48,4 +50,30 @@ vector<float> LDPC :: encode(const vector<unsigned char>& message)
     }
 
     return res;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Use box-muller transform for gaussian sampling
+//////////////////////////////////////////////////////////////////////
+float gaussSample(float mean, float var)
+{
+    float U1 = ((float)rand()) / RAND_MAX;
+    float U2 = ((float)rand()) / RAND_MAX;
+
+    return mean + sqrt(var) * sqrt(-2.0 * log(U1)) * cos(2 * M_PI * U2);
+}
+
+//////////////////////////////////////////////////////////////////////
+// Add some additive white guassian noise to some codeword
+//////////////////////////////////////////////////////////////////////
+void LDPC :: addAWGN(vector<float>& code, float EBOverNO)
+{
+    float rate = ((float)g.width) / g.height;
+    float var  = 1.0 / (2 * rate * EBOverNO);
+
+    for (int i = 0; i < code.size(); i++)
+    {
+        code[i] = gaussSample(code[i], var);
+    }
+
 }

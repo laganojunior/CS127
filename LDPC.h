@@ -12,6 +12,8 @@ struct LDPC
     void setMatrices(const Matrix& g, const Matrix& h);
     vector<float> encode(const vector<unsigned char>& message);
 
+    void addAWGN(vector<float>& code, float EBOverNO);
+
     // Generator and Parity check matrices
     Matrix g;
     Matrix h;
@@ -22,4 +24,4 @@ struct LDPC
 };
 
 
-#endif 
+#endif
