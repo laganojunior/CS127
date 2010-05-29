@@ -30,6 +30,14 @@ void LDPC :: setMatrices(const Matrix& g, const Matrix& h)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Set the EB/N0 parameter that determines the variance of the channel
+/////////////////////////////////////////////////////////////////////
+void LDPC :: setEBOverN0(float EBOverN0)
+{
+    this->EBOverN0 = EBOverN0;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Encode a message and transform it into soft bits
 //////////////////////////////////////////////////////////////////////
 vector<float> LDPC :: encode(const vector<unsigned char>& message)
@@ -66,10 +74,10 @@ float gaussSample(float mean, float var)
 //////////////////////////////////////////////////////////////////////
 // Add some additive white guassian noise to some codeword
 //////////////////////////////////////////////////////////////////////
-void LDPC :: addAWGN(vector<float>& code, float EBOverNO)
+void LDPC :: addAWGN(vector<float>& code)
 {
     float rate = ((float)g.width) / g.height;
-    float var  = 1.0 / (2 * rate * EBOverNO);
+    float var  = 1.0 / (2 * rate * EBOverN0);
 
     for (int i = 0; i < code.size(); i++)
     {

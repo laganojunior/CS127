@@ -10,9 +10,11 @@ using namespace std;
 struct LDPC
 {
     void setMatrices(const Matrix& g, const Matrix& h);
+    void setEBOverN0(float EBOverN0);
+
     vector<float> encode(const vector<unsigned char>& message);
 
-    void addAWGN(vector<float>& code, float EBOverNO);
+    void addAWGN(vector<float>& code);
 
     // Generator and Parity check matrices
     Matrix g;
@@ -21,6 +23,9 @@ struct LDPC
     // Index for each check node to which message nodes it connects to in
     // the tanner graph
     vector<vector<int> > checkNodeEdges;
+
+    // Parameter for noise on the channel
+    float EBOverN0;
 };
 
 

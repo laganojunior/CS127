@@ -22,6 +22,7 @@ int main()
 
     LDPC ldpc;
     ldpc.setMatrices(g, h);
+    ldpc.setEBOverN0(2.0);
 
     vector<unsigned char> message;
     message.push_back(0);
@@ -48,7 +49,7 @@ int main()
     cout << endl;
 
     // Add some noise
-    ldpc.addAWGN(code, 2.0);
+    ldpc.addAWGN(code);
     cout << "Sent Message: ";
     for (int i = 0; i < code.size(); i++)
     {
