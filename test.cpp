@@ -20,17 +20,16 @@ int main()
     h.load(hin);
     hin.close();
 
+    h.print(cout);
+    cout << endl;
+
     LDPC ldpc;
     ldpc.setMatrices(g, h);
-    ldpc.setEBOverN0(2.0);
+    ldpc.setEBOverN0(1.3);
 
     vector<unsigned char> message;
-    message.push_back(0);
-    message.push_back(0);
-    message.push_back(1);
-    message.push_back(0);
-    message.push_back(1);
-    message.push_back(0);
+    for (int i = 0; i < g.height; i++)
+        message.push_back(rand()%2);
 
     cout << "Original Message: ";
     for (int i = 0; i < message.size(); i++)
@@ -57,5 +56,36 @@ int main()
     }
     cout << endl;
 
-    return 0;
+    // Attempt to decode
+    vector<unsigned char> decoded;
+    if (ldpc.decode(code, decoded, 100000000))
+    {
+        cout << "Decoding Success\n";
+
+        cout << "Decoded Message: ";
+        for (int i = 0; i < decoded.size(); i++)
+        {
+            cout << (int)decoded[i] << " ";
+        }
+        cout << endl;
+
+        bool matches = true;
+        for (int i = 0; i < message.size(); i++)
+        {
+            if (decoded[i] != message[i])
+            {
+                matches = false;    
+                break;
+            }
+        }
+
+        if (matches)
+            cout << "Yay!\n";
+        else
+            cout << "Aww!\n";
+    }
+    else
+        cout << "Decoding Failure\n";
+
+        return 0;
 }

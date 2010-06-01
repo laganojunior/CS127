@@ -16,13 +16,22 @@ struct LDPC
 
     void addAWGN(vector<float>& code);
 
+    bool decode(const vector<float>& received,
+                vector<unsigned char>& out,
+                int maxIters);
+
     // Generator and Parity check matrices
     Matrix g;
     Matrix h;
 
-    // Index for each check node to which message nodes it connects to in
-    // the tanner graph
-    vector<vector<int> > checkNodeEdges;
+    // Vector mapping each variable node to a vector of pairs noting:
+    // - the index of a check node it is connected to
+    // - the index of the variable node in that check node's lis of connected
+    // - variable nodes
+    vector<vector<pair<int, int> > > variableNodeEdges;
+
+    // A similar vector for check node edges
+    vector<vector<pair<int, int> > > checkNodeEdges;
 
     // Parameter for noise on the channel
     float EBOverN0;
