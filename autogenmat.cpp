@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
 
     // Permute the columns of the parity check to enable an easy
     // derivation of a systematic encoder
-    if (!permuteForSystematic(h, h.width * 2))
+    if (!permuteForSystematic(h, h.width * h.width / 2))
     {
         cout << "Error in systematic permute\n";
         exit(1);

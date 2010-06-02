@@ -2,6 +2,9 @@
 #include <cstdlib>
 #include <math.h>
 
+#undef DEBUG_OUT
+#undef USE_MIN_RULE
+
 ///////////////////////////////////////////////////////////////////////////
 // Sets the generator matrix (g) and parity check matrix (h). This function
 // does not try to assert that h is a parity check matrix for g.
@@ -46,23 +49,38 @@ void LDPC :: setEBOverN0(float EBOverN0)
 }
 
 //////////////////////////////////////////////////////////////////////
-// Encode a message and transform it into soft bits
+// Encode a message
 //////////////////////////////////////////////////////////////////////
-vector<float> LDPC :: encode(const vector<unsigned char>& message)
+vector<unsigned char> LDPC :: encode(const vector<unsigned char>& message)
 {
     // Multiply the message by the generator matrix
     Matrix prod = g.binaryMult(message);
 
-    // Transform each of the bits to -1, 1
-    vector<float> res;
+    vector<unsigned char> res;
+
     res.resize(prod.height);
 
     for (int i = 0; i < prod.height; i++)    
+        res[i] = prod.m[i][0];
+
+    return res;
+}
+
+/////////////////////////////////////////////////////////////////////
+// Transform a set of bits into soft floating point bits
+/////////////////////////////////////////////////////////////////////
+vector<float> LDPC :: floatTransform(const vector<unsigned char>& message)
+{
+    vector<float> res;
+
+    res.resize(message.size());
+
+    for (int i = 0; i < message.size(); i++)
     {
-        if (prod.m[i][0])
-            res[i] = -1.0;
+        if (message[i])
+            res[i] = -1;
         else
-            res[i] = 1.0;
+            res[i] = 1;
     }
 
     return res;
@@ -110,15 +128,23 @@ bool LDPC :: decode(const vector<float>& received,
 
     // Initialize the values of the "intrinsic" values of the variable nodes.
     // These do not change per iteration
+    #ifdef DEBUG_OUT
     cout << "Original Intrs: ";
+    #endif
     vector<float> constVarVals;
     constVarVals.resize(received.size());
     for (int i = 0; i < received.size(); i++)
     {
         constVarVals[i] = 2.0 / var * received[i];
+
+        #ifdef DEBUG_OUT
         cout << constVarVals[i] << " ";
+        #endif
     }
+
+    #ifdef DEBUG_OUT
     cout << endl;
+    #endif
 
     // Initialize the values of the messages sent by variable nodes to the
     // intrinsic values
@@ -144,20 +170,14 @@ bool LDPC :: decode(const vector<float>& received,
     // Keep some storage for the argtangent calculations 
     vector<float> variableValTanh;
     variableValTanh.resize(variableMessages.size());
-
-    // Storage for total lambda calculations
-    vector<float> variableLambdaSum;
-    vector<float> oldVariableLambdaSum;
-    variableLambdaSum.resize(variableMessages.size());
-    oldVariableLambdaSum.resize(variableMessages.size());
-    oldVariableLambdaSum.assign(constVarVals.begin(),
-                                constVarVals.end());
+   
+    // Allocate space for the temporary decision 
+    vector<unsigned char> tempWord;
+    tempWord.resize(variableMessages.size());
 
     int numIters; 
-    bool earlyBreak = false;
     for (numIters = 0; numIters < maxIters; numIters++)
     {
-        
         // Calculate all check node messages
         for (int checkNodeI = 0; checkNodeI < checkNodeEdges.size();
                                  checkNodeI++)
@@ -165,85 +185,173 @@ bool LDPC :: decode(const vector<float>& received,
 
             // Figure out the related arctangents of all variable node
             // messages connected to this node
-            float prod = 1.0;
             for (int i = 0; i < checkNodeEdges[checkNodeI].size(); i++)
             {
                 pair<int, int> p = checkNodeEdges[checkNodeI][i];
                 int varI        = p.first;
                 int varMessageI = p.second;
 
-            //    cout << "Received: " << checkNodeI << " " << i << " "
-            //         << variableMessages[varI][varMessageI] << endl;
+                #ifdef DEBUG_OUT
+                cout << "Received: " << checkNodeI << " " << i << " "
+                     << variableMessages[varI][varMessageI] << endl;
+                #endif
 
                 variableValTanh[i] = tanh(variableMessages[varI][varMessageI]
                                           / 2.0);
-
-                prod *= variableValTanh[i];
             }
-
-//            cout << "Check Prod: " << checkNodeI << " " << prod << endl;
-
+            
             // Send out messages to each variable node, removing their own
             // contribution to the product
+            
             for (int i = 0; i < checkNodeEdges[checkNodeI].size(); i++)
             {
-                checkMessages[checkNodeI][i] = 2.0 * atanh(
-                                               prod / variableValTanh[i]);
- //               cout << "Check Message " << checkNodeI << " " << i << ": "
- //                    << checkMessages[checkNodeI][i] << endl; 
-            } 
+                #ifdef USE_MIN_RULE
+                float min = 100000.0;
+                int sign = 1;
+                for (int j = 0; j < i; j++)
+                {
+                    
+                    pair<int, int> p = checkNodeEdges[checkNodeI][j];
+                    int varI        = p.first;
+                    int varMessageI = p.second;
+                   
+                    float m = variableMessages[varI][varMessageI];
+                    #ifdef DEBUG_OUT 
+                    cout << "Received: " << m << endl;
+                    #endif
+                    if (fabs(m) < min)
+                    {
+                        min = fabs(m);
+                    }
+
+                    if (m < 0)
+                        sign *= -1;
+                }
+
+                for (int j = i + 1; j < checkNodeEdges[checkNodeI].size(); j++)
+                {
+                    
+                    pair<int, int> p = checkNodeEdges[checkNodeI][j];
+                    int varI        = p.first;
+                    int varMessageI = p.second;
+                    
+                    float m = variableMessages[varI][varMessageI];
+                    #ifdef DEBUG_OUT 
+                    cout << "Received: " << m << endl;
+                    #endif
+                    if (fabs(m) < min)
+                    {
+                        min = fabs(m);
+                    }
+
+                    if (m < 0)
+                        sign *= -1;
+                } 
+
+                checkMessages[checkNodeI][i] = sign * min;
+                
+                #else
+
+                float prod = 1.0;
+
+                for (int j = 0; j < i; j++)
+                {
+                    prod *= variableValTanh[j];
+                }
+
+                for (int j = i + 1; j < checkNodeEdges[checkNodeI].size(); j++)
+                {
+                    prod *= variableValTanh[j];
+                }
+               
+                checkMessages[checkNodeI][i] = 2.0 * atanh(prod);
+
+                #endif
+                                   
+                #ifdef DEBUG_OUT
+                cout << "Check Message " << checkNodeI << " " << i << ": "
+                     << checkMessages[checkNodeI][i] << endl; 
+                #endif 
+            }
         }
        
         
         // Figure out all variable node messages
         for (int varI = 0; varI < variableNodeEdges.size(); varI++)
         {
-            // Sum up the total lambdas, which is the intrinsic value plus
-            // incoming messages
-            variableLambdaSum[varI] = constVarVals[varI];
-
+            // Go over the nodes to send to
             for (int i = 0; i < variableNodeEdges[varI].size(); i++)
             {
-                pair<int, int> p = variableNodeEdges[varI][i];
-                int checkI        = p.first;
-                int checkMessageI = p.second;
+                // Add up the contributions from every other node connected
+                float sum = constVarVals[varI];
 
-                variableLambdaSum[varI] += checkMessages[checkI][checkMessageI];
-            //    cout << "Var received " << varI << " " << i << " "
-            //         << checkMessages[checkI][checkMessageI] << endl;
-            }
+                for (int j = 0; j < i; j++)
+                {
+                    pair<int, int> p = variableNodeEdges[varI][j];
+                    int checkI        = p.first;
+                    int checkMessageI = p.second;
 
-            // Now send messages to each connected check node, removing its
-            // contribution to the sums
-            for (int i = 0; i < variableNodeEdges[varI].size(); i++)
-            {
-                pair<int, int> p = variableNodeEdges[varI][i];
-                int checkI        = p.first;
-                int checkMessageI = p.second;
-            
-                variableMessages[varI][i] 
-                      = variableLambdaSum[varI]
-                      - checkMessages[checkI][checkMessageI];
+                    sum += checkMessages[checkI][checkMessageI];
 
-        //        cout << "Variable Message " << varI << " " << i << ": "
-        //            << variableMessages[varI][i] << endl; 
+                    #ifdef DEBUG_OUT
+                    cout << "Var received " << varI << " " << j << " "
+                         << checkMessages[checkI][checkMessageI] << endl;
+                    #endif
+
+                }
+
+                for (int j = i + 1; j < variableNodeEdges[varI].size(); j++)
+                {
+                    pair<int, int> p = variableNodeEdges[varI][j];
+                    int checkI        = p.first;
+                    int checkMessageI = p.second;
+
+                    sum += checkMessages[checkI][checkMessageI];
+
+                    #ifdef DEBUG_OUT
+                    cout << "Var received " << varI << " " << j << " "
+                         << checkMessages[checkI][checkMessageI] << endl;
+                    #endif
+                }
+
+                variableMessages[varI][i] = sum;
+                #ifdef DEBUG_OUT
+                cout << "Var message " << varI << " " << i << " "
+                     << sum << endl;
+                #endif
             }
         }
 
         // Make a tentative decision
-        vector<unsigned char> tempWord;
-       // cout << "Temp is: ";
-        tempWord.resize(variableLambdaSum.size());
-        for (int i = 0; i < variableLambdaSum.size(); i++)
+
+        #ifdef DEBUG_OUT
+        cout << "Temp is: ";
+        #endif
+        for (int varI = 0; varI < variableNodeEdges.size(); varI++)
         {
-            if (variableLambdaSum[i] < 0)
-                tempWord[i] = 1;
+            float sum = constVarVals[varI];
+
+            for (int i = 0; i < variableNodeEdges[varI].size(); i++)
+            {
+                pair<int, int> p = variableNodeEdges[varI][i];
+                int checkI        = p.first;
+                int checkMessageI = p.second;
+
+                sum += checkMessages[checkI][checkMessageI];
+            }
+   
+            if (sum < 0) 
+                tempWord[varI] = 1;
             else
-                tempWord[i] = 0;
-    
-     //       cout << (int)tempWord[i] << " " << variableLambdaSum[i] << endl;
+                tempWord[varI] = 0;
+
+            #ifdef DEBUG_OUT
+            cout << (int)tempWord[varI] << " " << sum << endl;
+            #endif
         }
-      //  cout << endl;
+        #ifdef DEBUG_OUT
+        cout << endl;
+        #endif
 
         // Check to see if the decision is a codeword by checking
         // each parity constraint
@@ -266,36 +374,18 @@ bool LDPC :: decode(const vector<float>& received,
          
         // If all the parity check constraints are satisfied, terminate
         // early and return the found codeword 
+
+        #ifdef DEBUG_OUT
+        cout << "Done Iter " << numIters << endl;
+        #endif
+        out = tempWord;
         if (found)
-        {
-            out = tempWord;
             break;
-        }
+
         
-        cout << "Iter " << numIters << ": " << endl;
-     /*   // Print the values of the current iteration
-        for (int i = 0; i < variableLambdaSum.size(); i++)
-        {
-            cout << variableLambdaSum[i] << " ";
-        } 
-
-        cout << endl; */
-        
-        // Check if the lambdas changed
-        float dist = 0;
-        for (int i = 0; i < variableLambdaSum.size(); i++)
-        {
-            float diff = variableLambdaSum[i] - oldVariableLambdaSum[i];
-            dist += diff * diff;
-        }
-
-        if (dist < .01)
-            return false;
-
-        oldVariableLambdaSum.assign(variableLambdaSum.begin(),
-                                    variableLambdaSum.end());
     }
-    
+    #ifdef DEBUG_OUT  
     cout << "In: " << numIters << endl;
+    #endif
     return (numIters != maxIters); // Early break means a codeword was detected
 }
