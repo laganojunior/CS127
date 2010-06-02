@@ -139,6 +139,9 @@ void testLinear(LDPC& ldpc, ostream& out, float min, float max, float step,
         }
 
         curr += step;
+
+        // Dump some stats on the weight distribution
+        dist.dumpStats();
     }
 }
 
@@ -175,16 +178,19 @@ void testLogLinear(LDPC& ldpc, ostream& out, float min, float max, float step,
         }
 
         curr *= step;
+
+        // Dump some stats on the weight distribution
+        dist.dumpStats();
     }
 }
 
 
 int main(int argc, char ** argv)
 {
-    if (argc != 9)
+    if (argc != 10)
     {
-        cout << "Usage: test gFilename hFilename out min max mult maxIters\n"
-             << "            maxIterDecode\n\n"
+        cout << "Usage: test gFilename hFilename out dist ...\n"
+             << "               min max mult maxIters maxIterDecode\n\n"
              << "\tGenerates a series of plot points of errors\n\n";
 
         cout << "\thFilename, gFilename - the files to read the parity\n"
@@ -193,6 +199,7 @@ int main(int argc, char ** argv)
 
         cout << "\tout   - the file to write results to. The lines are:\n"
                 "\t        EB/NO wordErrorRate symbolErrorRate\n"; 
+        cout << "\tdist  - the file to write codeword distribution results to.\n";
 
         cout << "\tmin, max - The minimum/maximum values of EB/NO to try\n";
         cout << "\tmult - the amount to multiplicatively step. This makes\n"
@@ -211,11 +218,12 @@ int main(int argc, char ** argv)
     string gFilename = argv[1];
     string hFilename = argv[2];
     string outFilename = argv[3];
-    double min = atof(argv[4]);
-    double max = atof(argv[5]);
-    double mult = atof(argv[6]);
-    int maxIters = atoi(argv[7]);
-    int maxIterDecode = atoi(argv[8]);
+    string distFilename = argv[4];
+    double min = atof(argv[5]);
+    double max = atof(argv[6]);
+    double mult = atof(argv[7]);
+    int maxIters = atoi(argv[8]);
+    int maxIterDecode = atoi(argv[9]);
 
     cout << "Seed: " << seed << endl;
     cout << "Loading G\n";
@@ -237,6 +245,10 @@ int main(int argc, char ** argv)
   
     cout << "Starting\n"; 
     ofstream out(outFilename.c_str()); 
+    ofstream statDump(distFilename.c_str());
+    dist.setDumpStream(statDump);
     testLogLinear(ldpc, out, min, max, mult, maxIters, maxIterDecode);
+
+    statDump.close(); 
     out.close(); 
 }
