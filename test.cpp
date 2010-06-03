@@ -68,6 +68,23 @@ bool testPoint(float EBOverN0, LDPC& ldpc, int maxTests,
             if (!matches)
             {
                 numErrors++;
+                
+                // The distance vector is most likely a low weight codeword
+                vector<unsigned char> diff;
+                diff.resize(decoded.size());
+                int weight = 0;
+                for (int i = 0; i < decoded.size(); i++)
+                {
+                    if (codeBits[i] != decoded[i])
+                    {
+                        weight++;
+                        diff[i] = 1;    
+                    }
+                    else
+                        diff[i] = 0; 
+                }
+                if (weight <= dist.currMinDist)
+                    dist.addMinCodeword(diff, weight);
             }
         }
         else
